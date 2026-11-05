@@ -1,0 +1,16 @@
+.git
+.github
+.gitignore
+.gitattributes
+.env
+.env.example
+docs
+scripts
+README.md
+LICENSE
+compose.yaml
+Dockerfile
+.dockerignore
+__pycache__
+*.pyc
+.venv
