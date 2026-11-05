@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Notes</title>
+  <style>
+    :root { --ink: #1c2733; --muted: #66727f; --line: #dde3e9; --accent: #14627f; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #f4f6f8; color: var(--ink); font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 620px; margin: 0 auto; padding: 32px 16px; }
+    h1 { margin: 0 0 16px; font-size: 28px; }
+    form { display: flex; gap: 8px; margin-bottom: 20px; }
+    input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; font: inherit; }
+    button { padding: 10px 16px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; font: inherit; cursor: pointer; }
+    ul { margin: 0; padding: 0; list-style: none; }
+    li { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; padding: 12px; background: #fff; border: 1px solid var(--line); border-radius: 8px; }
+    .text { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    time { display: block; color: var(--muted); font-size: 13px; }
+    li button { padding: 4px 10px; background: none; color: var(--muted); border: 1px solid var(--line); }
+    #empty, #error { color: var(--muted); }
+    #error { color: #b3261e; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Notes</h1>
+    <form id="form">
+      <input id="text" maxlength="500" placeholder="Write a note" required aria-label="New note">
+      <button type="submit">Add</button>
+    </form>
+    <p id="error" hidden></p>
+    <p id="empty" hidden>No notes yet.</p>
+    <ul id="notes"></ul>
+  </main>
+  <script>
+    const list = document.getElementById("notes");
+    const error = document.getElementById("error");
+
+    async function call(url, options) {
+      const response = await fetch(url, options);
+      error.hidden = response.ok;
+      if (!response.ok) { error.textContent = "Something went wrong. Try again."; return null; }
+      return response.status === 204 ? true : response.json();
+    }
+
+    function row(note) {
+      const li = document.createElement("li");
+      const body = document.createElement("div");
+      const text = document.createElement("span");
+      const time = document.createElement("time");
+      const remove = document.createElement("button");
+      body.className = "text";
+      text.textContent = note.text;
+      time.textContent = new Date(note.created_at).toLocaleString();
+      remove.textContent = "Delete";
+      remove.onclick = async () => { if (await call(`/api/notes/${note.id}`, { method: "DELETE" })) load(); };
+      body.append(text, time);
+      li.append(body, remove);
+      return li;
+    }
+
+    async function load() {
+      const notes = await call("/api/notes");
+      if (!notes) return;
+      list.replaceChildren(...notes.map(row));
+      document.getElementById("empty").hidden = notes.length > 0;
+    }
+
+    document.getElementById("form").onsubmit = async (event) => {
+      event.preventDefault();
+      const input = document.getElementById("text");
+      const added = await call("/api/notes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: input.value }),
+      });
+      if (added) { input.value = ""; load(); }
+    };
+
+    load();
+  </script>
+</body>
+</html>

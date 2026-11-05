@@ -1,0 +1,3 @@
+# Keep Linux line endings so the project runs the same on Ubuntu.
+* text=auto eol=lf
+*.png binary
