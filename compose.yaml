@@ -22,7 +22,8 @@ services:
     volumes:
       - notes_data:/var/lib/postgresql/data  # notes survive docker compose down
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      # -h localhost: during first setup PostgreSQL listens only on its socket, so this waits for the real server.
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 3s
       retries: 10
