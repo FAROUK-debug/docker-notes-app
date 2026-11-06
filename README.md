@@ -30,12 +30,13 @@ docker compose down -v             # also delete the volume and all notes
 
 ## Check that data survives
 
-[`scripts/check_persistence.sh`](scripts/check_persistence.sh) adds a note, runs `docker compose down`, starts everything again and checks the note is still there. GitHub Actions runs it on every push.
+[`scripts/check_persistence.sh`](scripts/check_persistence.sh) adds a note, runs `docker compose down`, starts everything again and checks the note is still there. It then checks that the API refuses an empty note and a missing id. GitHub Actions runs it on every push.
 
 ```bash
 $ bash scripts/check_persistence.sh
 Added note: survives-1793898392
 PASS: the note survived docker compose down / up
+PASS: the API refuses an empty note and a missing id
 ```
 
 ## How it works
@@ -47,6 +48,7 @@ browser ──► web (FastAPI, port 8000) ──► db (PostgreSQL) ──► v
 - **Network:** Compose puts both containers on one private network. The web app reaches the database by its service name, `db`.
 - **Start order:** the web container waits until the database's health check passes.
 - **Database port:** it isn't published to the host, so only the web container can reach PostgreSQL.
+- **Web port:** 8000 is open to your network and the app has no login, so anyone there can read and delete notes. It's a local demo: to keep it on your machine only, use `"127.0.0.1:8000:8000"` in `compose.yaml`.
 
 ## Good practices
 
