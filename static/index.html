@@ -38,10 +38,18 @@
     const error = document.getElementById("error");
 
     async function call(url, options) {
-      const response = await fetch(url, options);
-      error.hidden = response.ok;
-      if (!response.ok) { error.textContent = "Something went wrong. Try again."; return null; }
-      return response.status === 204 ? true : response.json();
+      try {
+        const response = await fetch(url, options);
+        if (response.ok) {
+          error.hidden = true;
+          return response.status === 204 ? true : response.json();
+        }
+      } catch {
+        // The server can't be reached: same message as a failed request.
+      }
+      error.textContent = "Something went wrong. Try again.";
+      error.hidden = false;
+      return null;
     }
 
     function row(note) {
